@@ -4,8 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "concurrently \"next dev --turbopack\" \"node mcp-bridge/server.js\"",
-    "dev:next": "next dev --turbopack",
+    "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
@@ -24,7 +23,6 @@
     "@prisma/client": "^6.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "concurrently": "^9.2.0",
     "dotenv": "^16.4.7",
     "lucide-react": "^0.469.0",
     "next": "^15.3.1",
