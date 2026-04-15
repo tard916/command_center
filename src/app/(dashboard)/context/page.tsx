@@ -12,7 +12,7 @@ export default async function ContextPage() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-100">Global Context</h1>
           <p className="text-zinc-400 text-sm mt-1">
-            This document is injected into every agent's prompt — it's your team's shared memory.
+            This document is injected into every agent&apos;s prompt — it&apos;s your team&apos;s shared memory.
           </p>
         </div>
         {ctx && (
