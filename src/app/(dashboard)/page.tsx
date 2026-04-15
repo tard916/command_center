@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ensureGlobalContext } from "@/lib/context";
 
@@ -44,7 +45,7 @@ export default async function DashboardPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-zinc-300 mb-4">Your Team</h2>
           {agents.length === 0 ? (
-            <p className="text-zinc-500 text-sm">No agents yet. <a href="/agents" className="text-violet-400 hover:underline">Create your first agent →</a></p>
+            <p className="text-zinc-500 text-sm">No agents yet. <Link href="/agents" className="text-violet-400 hover:underline">Create your first agent →</Link></p>
           ) : (
             <div className="space-y-3">
               {agents.slice(0, 5).map((agent) => (
