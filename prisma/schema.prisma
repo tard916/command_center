@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  sessions  Session[]
+  accounts  Account[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum AgentStatus {
+  IDLE
+  WORKING
+  ERROR
+}
+
+model Agent {
+  id             String         @id @default(cuid())
+  name           String
+  avatar         String         @default("🤖")
+  role           String         @default("")
+  soul           String         @db.Text
+  skills         String[]       @default([])
+  status         AgentStatus    @default(IDLE)
+  workingContext String         @default("") @db.Text
+  conversations  Conversation[]
+  tasks          Task[]
+  projects       ProjectAgent[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Project {
+  id          String         @id @default(cuid())
+  name        String
+  description String         @default("") @db.Text
+  status      String         @default("active")
+  agents      ProjectAgent[]
+  tasks       Task[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model ProjectAgent {
+  id        String  @id @default(cuid())
+  projectId String
+  agentId   String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  agent     Agent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, agentId])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Task {
+  id              String     @id @default(cuid())
+  title           String
+  description     String     @default("") @db.Text
+  status          TaskStatus @default(TODO)
+  priority        Priority   @default(MEDIUM)
+  projectId       String
+  assignedAgentId String?
+  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedAgent   Agent?     @relation(fields: [assignedAgentId], references: [id], onDelete: SetNull)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model GlobalContext {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  snapshots Json     @default("[]")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  agentId   String
+  threadId  String?
+  messages  Json     @default("[]")
+  mode      String   @default("LOCAL")
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
