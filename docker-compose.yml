@@ -10,14 +10,25 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cc -d command_center"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
       context: .
       dockerfile: Dockerfile.dev
     restart: unless-stopped
-    env_file:
-      - .env.local
+    environment:
+      DATABASE_URL: postgresql://cc:cc@db:5432/command_center
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: dev-secret-change-in-production
+      ADMIN_EMAIL: admin@224tech.com
+      ADMIN_PASSWORD: changeme
+      MCP_BRIDGE_PORT: "3001"
+      MCP_BRIDGE_TIMEOUT_MS: "2000"
     ports:
       - "3000:3000"
       - "3001:3001"
@@ -26,7 +37,8 @@ services:
       - /app/node_modules
       - /app/.next
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
