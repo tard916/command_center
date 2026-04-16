@@ -93,6 +93,78 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // CC-29: Check spend alerts and update aggregates (CLOUD mode only)
+      // Note: AgentSpend and ProjectSpend upserts are commented out until Prisma client regenerates
+      // These models are defined in schema.prisma and will work once migration is applied
+      if (usage && mode === "CLOUD") {
+        const now = new Date();
+        const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+        // TODO: Uncomment after Prisma client regeneration
+        // Upsert AgentSpend aggregation
+        // const agentSpend = await (prisma as any).agentSpend.upsert({
+        //   where: { agentId_month: { agentId, month } },
+        //   create: {
+        //     agentId,
+        //     month,
+        //     totalInputTokens: usage.input_tokens,
+        //     totalOutputTokens: usage.output_tokens,
+        //     totalCacheReadTokens: usage.cache_read_input_tokens,
+        //     totalCostUsd: conversationData.costUsd,
+        //   },
+        //   update: {
+        //     totalInputTokens: { increment: usage.input_tokens },
+        //     totalOutputTokens: { increment: usage.output_tokens },
+        //     totalCacheReadTokens: { increment: usage.cache_read_input_tokens },
+        //     totalCostUsd: { increment: conversationData.costUsd },
+        //   },
+        // });
+
+        // CC-29: Check spend alert threshold
+        const SPEND_ALERT_THRESHOLD = parseFloat(
+          process.env.SPEND_ALERT_THRESHOLD_USD || "10"
+        );
+        // TODO: Enable after agentSpend upsert is available
+        // if (agentSpend && Number(agentSpend.totalCostUsd) > SPEND_ALERT_THRESHOLD) {
+        //   console.warn(
+        //     `🚨 Agent ${agentId} exceeded monthly budget: $${Number(agentSpend.totalCostUsd).toFixed(2)} > $${SPEND_ALERT_THRESHOLD}`
+        //   );
+        // }
+
+        // TODO: Uncomment after Prisma client regeneration
+        // Upsert ProjectSpend aggregation (if agent has a project)
+        // const agentProject = await prisma.projectAgent.findFirst({
+        //   where: { agentId },
+        //   select: { projectId: true },
+        // });
+        // if (agentProject) {
+        //   await (prisma as any).projectSpend.upsert({
+        //     where: {
+        //       projectId_agentId_month: {
+        //         projectId: agentProject.projectId,
+        //         agentId,
+        //         month,
+        //       },
+        //     },
+        //     create: {
+        //       projectId: agentProject.projectId,
+        //       agentId,
+        //       month,
+        //       totalInputTokens: usage.input_tokens,
+        //       totalOutputTokens: usage.output_tokens,
+        //       totalCacheReadTokens: usage.cache_read_input_tokens,
+        //       totalCostUsd: conversationData.costUsd,
+        //     },
+        //     update: {
+        //       totalInputTokens: { increment: usage.input_tokens },
+        //       totalOutputTokens: { increment: usage.output_tokens },
+        //       totalCacheReadTokens: { increment: usage.cache_read_input_tokens },
+        //       totalCostUsd: { increment: conversationData.costUsd },
+        //     },
+        //   });
+        // }
+      }
+
       // Update agent working context
       await prisma.agent.update({
         where: { id: agentId },
