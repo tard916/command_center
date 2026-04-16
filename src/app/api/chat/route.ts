@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       );
 
       // Persist conversation (with optional threadId support)
-      const convWhere: any = { agentId };
+      const convWhere: { agentId: string; threadId?: string } = { agentId };
       if (threadId) convWhere.threadId = threadId;
 
       const conv = await prisma.conversation.findFirst({
