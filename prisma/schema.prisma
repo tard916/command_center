@@ -69,19 +69,23 @@ model Agent {
   conversations  Conversation[]
   tasks          Task[]
   projects       ProjectAgent[]
+  projectSpends  ProjectSpend[]
+  agentSpends    AgentSpend[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
 
 model Project {
-  id          String         @id @default(cuid())
-  name        String
-  description String         @default("") @db.Text
-  status      String         @default("active")
-  agents      ProjectAgent[]
-  tasks       Task[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id           String         @id @default(cuid())
+  name         String
+  description  String         @default("") @db.Text
+  status       String         @default("active")
+  agents       ProjectAgent[]
+  tasks        Task[]
+  conversations Conversation[]
+  projectSpends ProjectSpend[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model ProjectAgent {
@@ -130,13 +134,61 @@ model GlobalContext {
   createdAt DateTime @default(now())
 }
 
+// CC-29: Project-level spend aggregation (monthly rollup)
+model ProjectSpend {
+  id                      String   @id @default(cuid())
+  projectId               String
+  agentId                 String?  // Optional: break down by agent
+  month                   String   // YYYY-MM format for aggregation
+
+  totalInputTokens        Int      @default(0)
+  totalOutputTokens       Int      @default(0)
+  totalCacheReadTokens    Int      @default(0)
+  totalCostUsd            Decimal  @default(0)
+
+  project                 Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  agent                   Agent?   @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@unique([projectId, agentId, month])
+}
+
+// CC-29: Agent-level spend aggregation (monthly rollup)
+model AgentSpend {
+  id                      String   @id @default(cuid())
+  agentId                 String
+  month                   String   // YYYY-MM format
+
+  totalInputTokens        Int      @default(0)
+  totalOutputTokens       Int      @default(0)
+  totalCacheReadTokens    Int      @default(0)
+  totalCostUsd            Decimal  @default(0)
+
+  agent                   Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@unique([agentId, month])
+}
+
 model Conversation {
-  id        String   @id @default(cuid())
-  agentId   String
-  threadId  String?
-  messages  Json     @default("[]")
-  mode      String   @default("LOCAL")
-  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  agentId                 String
+  threadId                String?
+  projectId               String?  // CC-29: For per-project attribution
+  messages                Json     @default("[]")
+  mode                    String   @default("LOCAL")
+
+  // CC-27/CC-29: Usage data for cost tracking (CLOUD mode only)
+  inputTokens             Int?
+  outputTokens            Int?
+  cacheCreationTokens     Int?
+  cacheReadTokens         Int?
+  costUsd                 Decimal? // Calculated from token counts + pricing
+
+  agent                   Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  project                 Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 }
