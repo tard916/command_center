@@ -35,8 +35,7 @@ export async function GET(
     )}`;
 
     // Get all conversations for this agent (CLOUD mode only)
-    // Note: Once Prisma client regenerates with new fields, this will select usage fields
-    const conversations = await (prisma.conversation.findMany as any)({
+    const conversations = await prisma.conversation.findMany({
       where: { agentId, mode: "CLOUD" },
     });
 

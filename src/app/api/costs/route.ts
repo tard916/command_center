@@ -21,8 +21,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Aggregate spend data from Conversation table (mode=CLOUD only)
-    // Once ProjectSpend/AgentSpend models are generated, query those instead
-    const conversations = await (prisma.conversation.findMany as any)({
+    const conversations = await prisma.conversation.findMany({
       where: { mode: "CLOUD" },
       include: { agent: true },
     });

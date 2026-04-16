@@ -35,7 +35,7 @@ export async function GET(
     )}`;
 
     // Get current month spend from conversations in this project
-    const currentMonthConversations = await (prisma.conversation.findMany as any)({
+    const currentMonthConversations = await prisma.conversation.findMany({
       where: { projectId, mode: "CLOUD" },
     });
 
