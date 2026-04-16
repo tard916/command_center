@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { agentId, message } = await req.json();
+  const { agentId, message, threadId } = await req.json();
   if (!agentId || !message) {
     return NextResponse.json({ error: "agentId and message required" }, { status: 400 });
   }
@@ -39,15 +39,21 @@ export async function POST(req: NextRequest) {
         (m) => { mode = m; }
       );
 
-      // Persist conversation
+      // Persist conversation (with optional threadId support)
+      const convWhere: { agentId: string; threadId?: string } = { agentId };
+      if (threadId) convWhere.threadId = threadId;
+
       const conv = await prisma.conversation.findFirst({
-        where: { agentId },
+        where: convWhere,
         orderBy: { updatedAt: "desc" },
       });
 
       const messages = conv ? (conv.messages as { role: string; content: string }[]) : [];
       messages.push({ role: "user", content: userMessage });
       messages.push({ role: "assistant", content: fullResponse });
+
+      // Auto-generate threadId if not provided
+      const assignedThreadId = threadId || crypto.randomUUID();
 
       if (conv) {
         await prisma.conversation.update({
@@ -56,7 +62,7 @@ export async function POST(req: NextRequest) {
         });
       } else {
         await prisma.conversation.create({
-          data: { agentId, messages, mode },
+          data: { agentId, messages, mode, threadId: assignedThreadId },
         });
       }
 
