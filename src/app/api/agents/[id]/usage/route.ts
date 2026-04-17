@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,13 +9,13 @@ import { prisma } from "@/lib/prisma";
  * CC-29: Per-agent usage details (placeholder until AgentSpend model available)
  */
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: unknown,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const agentId = params.id;
+  const { id: agentId } = await params;
 
   try {
     // Verify agent exists

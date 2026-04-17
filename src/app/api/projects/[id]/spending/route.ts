@@ -20,13 +20,13 @@ interface TimeStats {
 }
 
 export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: unknown,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const projectId = params.id;
+  const { id: projectId } = await params;
 
   try {
     // Verify project exists
@@ -48,6 +48,7 @@ export async function GET(
     // Get current month spend from conversations in this project
     const currentMonthConversations = await prisma.conversation.findMany({
       where: { projectId, mode: "CLOUD" },
+      include: { agent: true },
     });
 
     const currentMonthTotal = currentMonthConversations.reduce((sum: number, c) => {
