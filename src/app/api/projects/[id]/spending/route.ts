@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -8,8 +8,19 @@ import { prisma } from "@/lib/prisma";
  * Returns spending data for a specific project including monthly trends
  * CC-29: Per-project spending details and historical trend
  */
+interface AgentBreakdown {
+  agentId: string;
+  agentName: string;
+  costUsd: number;
+}
+
+interface TimeStats {
+  costUsd: number;
+  count: number;
+}
+
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -39,7 +50,7 @@ export async function GET(
       where: { projectId, mode: "CLOUD" },
     });
 
-    const currentMonthTotal = currentMonthConversations.reduce((sum: number, c: any) => {
+    const currentMonthTotal = currentMonthConversations.reduce((sum: number, c) => {
       const convMonth = `${c.createdAt.getFullYear()}-${String(c.createdAt.getMonth() + 1).padStart(2, "0")}`;
       if (convMonth === currentMonth) {
         return sum + (c.costUsd ? Number(c.costUsd) : 0);
@@ -51,7 +62,7 @@ export async function GET(
     const allConversations = currentMonthConversations;
 
     // Get all-time aggregate
-    const allTimeStats = allConversations.reduce((acc: any, c: any) => {
+    const allTimeStats = allConversations.reduce((acc: TimeStats, c) => {
       if (c.mode === "CLOUD") {
         acc.costUsd += c.costUsd ? Number(c.costUsd) : 0;
         acc.count += 1;
@@ -60,8 +71,8 @@ export async function GET(
     }, { costUsd: 0, count: 0 });
 
     // Get breakdown by agent for current month
-    const agentBreakdownMap = new Map<string, any>();
-    currentMonthConversations.forEach((c: any) => {
+    const agentBreakdownMap = new Map<string, AgentBreakdown>();
+    currentMonthConversations.forEach((c) => {
       const convMonth = `${c.createdAt.getFullYear()}-${String(c.createdAt.getMonth() + 1).padStart(2, "0")}`;
       if (convMonth === currentMonth && c.agentId) {
         const existing = agentBreakdownMap.get(c.agentId) || {
@@ -81,7 +92,7 @@ export async function GET(
       currentMonthSpend: {
         costUsd: parseFloat(currentMonthTotal.toFixed(2)),
       },
-      byAgent: Array.from(agentBreakdownMap.values()).sort((a: any, b: any) => b.costUsd - a.costUsd).map((a: any) => ({
+      byAgent: Array.from(agentBreakdownMap.values()).sort((a, b) => b.costUsd - a.costUsd).map((a) => ({
         agentId: a.agentId,
         agentName: a.agentName,
         costUsd: parseFloat(a.costUsd.toFixed(2)),

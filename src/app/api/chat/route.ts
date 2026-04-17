@@ -64,7 +64,17 @@ export async function POST(req: NextRequest) {
       const assignedThreadId = threadId || crypto.randomUUID();
 
       // CC-27: Persist usage data (CLOUD mode only)
-      const conversationData: any = {
+      interface ConversationData {
+        messages: Array<{ role: string; content: string }>;
+        mode: string;
+        inputTokens?: number;
+        outputTokens?: number;
+        cacheCreationTokens?: number;
+        cacheReadTokens?: number;
+        costUsd?: number;
+        projectId?: string;
+      }
+      const conversationData: ConversationData = {
         messages,
         mode,
       };

@@ -8,7 +8,13 @@ import { prisma } from "@/lib/prisma";
  * Returns current month spend summary by agent and project
  * CC-29: Spend visibility endpoint (placeholder until ProjectSpend/AgentSpend models available)
  */
-export async function GET(req: NextRequest) {
+interface AgentCost {
+  agentId: string;
+  agentName: string;
+  costUsd: number;
+}
+
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -27,8 +33,8 @@ export async function GET(req: NextRequest) {
     });
 
     // Calculate aggregates per agent
-    const byAgent = new Map<string, any>();
-    conversations.forEach((conv: any) => {
+    const byAgent = new Map<string, AgentCost>();
+    conversations.forEach((conv) => {
       if (conv.agentId && conv.costUsd) {
         const existing = byAgent.get(conv.agentId) || {
           agentId: conv.agentId,
@@ -41,7 +47,7 @@ export async function GET(req: NextRequest) {
     });
 
     const totalCost = Array.from(byAgent.values()).reduce(
-      (sum: number, a: any) => sum + a.costUsd,
+      (sum: number, a) => sum + a.costUsd,
       0
     );
 
@@ -49,11 +55,11 @@ export async function GET(req: NextRequest) {
       currentMonth,
       totalCostUsd: parseFloat(totalCost.toFixed(2)),
       byAgent: Array.from(byAgent.values())
-        .map((a: any) => ({
+        .map((a) => ({
           ...a,
           costUsd: parseFloat(a.costUsd.toFixed(2)),
         }))
-        .sort((a: any, b: any) => b.costUsd - a.costUsd),
+        .sort((a, b) => b.costUsd - a.costUsd),
       byProject: [],
     });
   } catch (error) {

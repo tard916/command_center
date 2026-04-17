@@ -40,25 +40,25 @@ export async function GET(
     });
 
     // Calculate current month stats
-    const currentMonthConversations = conversations.filter((c: any) => {
+    const currentMonthConversations = conversations.filter((c) => {
       const convMonth = `${c.createdAt.getFullYear()}-${String(c.createdAt.getMonth() + 1).padStart(2, "0")}`;
       return convMonth === currentMonth;
     });
 
     const currentInputTokens = currentMonthConversations.reduce(
-      (sum: number, c: any) => sum + (c.inputTokens || 0),
+      (sum: number, c) => sum + (c.inputTokens || 0),
       0
     );
     const currentOutputTokens = currentMonthConversations.reduce(
-      (sum: number, c: any) => sum + (c.outputTokens || 0),
+      (sum: number, c) => sum + (c.outputTokens || 0),
       0
     );
     const currentCacheReadTokens = currentMonthConversations.reduce(
-      (sum: number, c: any) => sum + (c.cacheReadTokens || 0),
+      (sum: number, c) => sum + (c.cacheReadTokens || 0),
       0
     );
     const currentCostUsd = currentMonthConversations.reduce(
-      (sum: number, c: any) => sum + (c.costUsd ? Number(c.costUsd) : 0),
+      (sum: number, c) => sum + (c.costUsd ? Number(c.costUsd) : 0),
       0
     );
 
@@ -81,19 +81,19 @@ export async function GET(
 
     // All-time stats
     const allTimeInputTokens = conversations.reduce(
-      (sum: number, c: any) => sum + (c.inputTokens || 0),
+      (sum: number, c) => sum + (c.inputTokens || 0),
       0
     );
     const allTimeOutputTokens = conversations.reduce(
-      (sum: number, c: any) => sum + (c.outputTokens || 0),
+      (sum: number, c) => sum + (c.outputTokens || 0),
       0
     );
     const allTimeCacheReadTokens = conversations.reduce(
-      (sum: number, c: any) => sum + (c.cacheReadTokens || 0),
+      (sum: number, c) => sum + (c.cacheReadTokens || 0),
       0
     );
     const allTimeCostUsd = conversations.reduce(
-      (sum: number, c: any) => sum + (c.costUsd ? Number(c.costUsd) : 0),
+      (sum: number, c) => sum + (c.costUsd ? Number(c.costUsd) : 0),
       0
     );
 
